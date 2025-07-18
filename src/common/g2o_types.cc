@@ -21,7 +21,7 @@ void EdgePriorPoseNavState::computeError() {
     const Vec3d er = SO3(state_.R_.matrix().transpose() * vp->estimate().so3().matrix()).log();
     const Vec3d ep = vp->estimate().translation() - state_.p_;
     const Vec3d ev = vv->estimate() - state_.v_;
-    const Vec3d ebg = vg->estimate() - state_.bg_;
+    const Vec3d ebg = vg->estimate() - state_.bg_;  
     const Vec3d eba = va->estimate() - state_.ba_;
 
     _error << er, ep, ev, ebg, eba;

@@ -29,7 +29,7 @@ void EdgeInertial::computeError() {
     const Vec3d dv = preint_->GetDeltaVelocity(bg, ba);
     const Vec3d dp = preint_->GetDeltaPosition(bg, ba);
 
-    /// 预积分误差项（4.41）
+    /// 预积分误差项    
     const Vec3d er = (dR.inverse() * p1->estimate().so3().inverse() * p2->estimate().so3()).log();
     Mat3d RiT = p1->estimate().so3().inverse().matrix();
     const Vec3d ev = RiT * (v2->estimate() - v1->estimate() - grav_ * dt_) - dv;

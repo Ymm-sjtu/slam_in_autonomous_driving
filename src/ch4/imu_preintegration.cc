@@ -47,10 +47,10 @@ void IMUPreintegration::Integrate(const IMU &imu, double dt) {
     dV_dbg_ = dV_dbg_ - dR_.matrix() * dt * acc_hat * dR_dbg_;                         // (4.39c)
 
     // 旋转部分
-    Vec3d omega = gyr * dt;         // 转动量
-    Mat3d rightJ = SO3::jr(omega);  // 右雅可比
-    SO3 deltaR = SO3::exp(omega);   // exp后
-    dR_ = dR_ * deltaR;             // (4.9)
+    Vec3d omega = gyr * dt;                 // 转动量
+    Mat3d rightJ = SO3::jr(omega);   // 右雅可比
+    SO3 deltaR = SO3::exp(omega);          // exp后
+    dR_ = dR_ * deltaR;                    // (4.9)
 
     A.block<3, 3>(0, 0) = deltaR.matrix().transpose();
     B.block<3, 3>(0, 0) = rightJ * dt;
@@ -65,6 +65,8 @@ void IMUPreintegration::Integrate(const IMU &imu, double dt) {
     dt_ += dt;
 }
 
+// 以下三个函数来自公式(4.32)
+// 根据当前零偏更新预积分观测值
 SO3 IMUPreintegration::GetDeltaRotation(const Vec3d &bg) { return dR_ * SO3::exp(dR_dbg_ * (bg - bg_)); }
 
 Vec3d IMUPreintegration::GetDeltaVelocity(const Vec3d &bg, const Vec3d &ba) {
@@ -75,6 +77,7 @@ Vec3d IMUPreintegration::GetDeltaPosition(const Vec3d &bg, const Vec3d &ba) {
     return dp_ + dP_dbg_ * (bg - bg_) + dP_dba_ * (ba - ba_);
 }
 
+// 根据初始值 + 预积分 计算更新后的值，公式（4.7）变形
 NavStated IMUPreintegration::Predict(const sad::NavStated &start, const Vec3d &grav) const {
     SO3 Rj = start.R_ * dR_;
     Vec3d vj = start.R_ * dv_ + start.v_ + grav * dt_;

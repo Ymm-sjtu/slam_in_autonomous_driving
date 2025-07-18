@@ -18,6 +18,7 @@
 #include <g2o/core/optimization_algorithm_levenberg.h>
 #include <g2o/core/robust_kernel.h>
 #include <g2o/solvers/eigen/linear_solver_eigen.h>
+#include <g2o/core/robust_kernel_impl.h>
 
 DEFINE_string(txt_path, "./data/ch3/10.txt", "数据文件路径");
 DEFINE_double(antenna_angle, 12.06, "RTK天线安装偏角（角度）");

@@ -5,8 +5,8 @@
 #ifndef MAPPING_DR_PRE_INTEG_H
 #define MAPPING_DR_PRE_INTEG_H
 
-#include <deque>
-#include <fstream>
+// #include <deque>
+// #include <fstream>
 #include <memory>
 
 #include "common/eigen_types.h"
@@ -101,6 +101,10 @@ class GinsPreInteg {
     std::shared_ptr<NavStated> last_frame_ = nullptr;  // 上一个时刻状态
     std::shared_ptr<NavStated> this_frame_ = nullptr;  // 当前时刻状态
     Mat15d prior_info_ = Mat15d::Identity() * 1e2;     // 当前时刻先验
+
+    // prior_info_ = [姿态信息(3×3)    0               0       ]
+    //               [0           速度信息(3×3)        0       ]  
+    //               [0               0           零偏信息(6×6)]
 
     /// 两帧GNSS观测
     GNSS last_gnss_;

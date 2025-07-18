@@ -38,7 +38,9 @@ class EdgeInertial : public g2o::BaseMultiEdge<9, Vec9d> {
     bool read(std::istream& is) override { return false; }
     bool write(std::ostream& os) const override { return false; }
 
+    // 计算残差（4.41）
     void computeError() override;
+    // 计算雅可比矩阵
     void linearizeOplus() override;
 
     Eigen::Matrix<double, 24, 24> GetHessian() {

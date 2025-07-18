@@ -11,11 +11,11 @@
 #include <g2o/core/base_vertex.h>
 #include <g2o/core/robust_kernel.h>
 
-#include "common/gnss.h"
+// #include "common/gnss.h"
 #include "common/nav_state.h"
 
-#include "ch4/imu_preintegration.h"
-#include "g2o/core/robust_kernel_impl.h"
+// #include "ch4/imu_preintegration.h"
+// #include "g2o/core/robust_kernel_impl.h"
 
 #include <glog/logging.h>
 
@@ -111,7 +111,8 @@ class EdgeGyroRW : public g2o::BaseBinaryEdge<3, Vec3d, VertexGyroBias, VertexGy
         _jacobianOplusXi = -Mat3d::Identity();
         _jacobianOplusXj.setIdentity();
     }
-
+    
+    // J = [-I₃  I₃]  (3×6矩阵)
     Eigen::Matrix<double, 6, 6> GetHessian() {
         linearizeOplus();
         Eigen::Matrix<double, 3, 6> J;
@@ -189,6 +190,7 @@ class EdgePriorPoseNavState : public g2o::BaseMultiEdge<15, Vec15d> {
  * 误差的角度在前，平移在后
  */
 class EdgeGNSS : public g2o::BaseUnaryEdge<6, SE3, VertexPose> {
+    // 一元边：只连接一个顶点，表示对该位姿的绝对观测约束。
    public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
     EdgeGNSS() = default;

@@ -12,6 +12,7 @@
 #include <g2o/core/optimization_algorithm_levenberg.h>
 #include <g2o/core/robust_kernel.h>
 #include <g2o/solvers/eigen/linear_solver_eigen.h>
+#include <g2o/core/robust_kernel_impl.h>
 
 namespace sad {
 
@@ -157,6 +158,8 @@ void GinsPreInteg::Optimize() {
     edge_inertial->setVertex(3, v0_ba);
     edge_inertial->setVertex(4, v1_pose);
     edge_inertial->setVertex(5, v1_vel);
+
+    // 设置Huber鲁棒核函数
     auto* rk = new g2o::RobustKernelHuber();
     rk->setDelta(200.0);
     edge_inertial->setRobustKernel(rk);
@@ -198,6 +201,7 @@ void GinsPreInteg::Optimize() {
     Vec3d vel_odom = Vec3d::Zero();
     if (last_odom_set_) {
         // velocity obs
+        // 速度 = 轮子半径 × 脉冲数 / 编码器分辨率 × 2π / 时间间隔
         double velo_l =
             options_.wheel_radius_ * last_odom_.left_pulse_ / options_.circle_pulse_ * 2 * M_PI / options_.odom_span_;
         double velo_r =
@@ -218,6 +222,9 @@ void GinsPreInteg::Optimize() {
     optimizer.initializeOptimization();
     optimizer.optimize(20);
 
+    // chi2 = residual^T * Information * residual
+    // chi2 是卡方统计量(Chi-squared statistic)，在图优化中用来衡量每个约束边的拟合程度。
+    // 如果观测误差服从高斯分布，chi2值服从卡方分布：chi2 ~ χ²(n)  // n为残差维度
     if (options_.verbose_) {
         // 获取结果，统计各类误差
         LOG(INFO) << "chi2/error: ";
@@ -233,6 +240,7 @@ void GinsPreInteg::Optimize() {
         }
     }
 
+    // 状态更新
     last_frame_->R_ = v0_pose->estimate().so3();
     last_frame_->p_ = v0_pose->estimate().translation();
     last_frame_->v_ = v0_vel->estimate();

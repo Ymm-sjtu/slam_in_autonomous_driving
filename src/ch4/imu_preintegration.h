@@ -1,10 +1,10 @@
 #ifndef IMUTYPES_H
 #define IMUTYPES_H
 
-#include <mutex>
+// #include <mutex>
 #include <opencv2/core/core.hpp>
-#include <utility>
-#include <vector>
+// #include <utility>
+// #include <vector>
 
 #include "common/eigen_types.h"
 #include "common/imu.h"
@@ -54,8 +54,8 @@ class IMUPreintegration {
 
    public:
     double dt_ = 0;                          // 整体预积分时间
-    Mat9d cov_ = Mat9d::Zero();              // 累计噪声矩阵
-    Mat6d noise_gyro_acce_ = Mat6d::Zero();  // 测量噪声矩阵
+    Mat9d cov_ = Mat9d::Zero();              // 累计噪声矩阵，见公式（4.31）
+    Mat6d noise_gyro_acce_ = Mat6d::Zero();  // 测量噪声矩阵，见公式（4.31）
 
     // 零偏
     Vec3d bg_ = Vec3d::Zero();
