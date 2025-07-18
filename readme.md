@@ -130,6 +130,7 @@ mkdir build
 cd build
 cmake ..
 make -j8
+sudo make install
 cd /sad
 mkdir build
 cd build

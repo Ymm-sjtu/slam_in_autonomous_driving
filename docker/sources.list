@@ -15,3 +15,6 @@ deb http://security.ubuntu.com/ubuntu/ focal-security main restricted universe m
 # 预发布软件源，不建议启用
 # deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-proposed main restricted universe multiverse
 # # deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-proposed main restricted universe multiverse
+
+# ROS 镜像源
+deb https://mirrors.tuna.tsinghua.edu.cn/ros/ubuntu/ focal main
