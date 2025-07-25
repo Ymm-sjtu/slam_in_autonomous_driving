@@ -5,6 +5,7 @@
 #ifndef SLAM_IN_AUTO_DRIVING_DATASET_TYPE_H
 #define SLAM_IN_AUTO_DRIVING_DATASET_TYPE_H
 
+#include <string>
 namespace sad {
 
 /// 枚举本书用到的一些数据集

@@ -54,7 +54,7 @@ void GenerateRangeImage(PointCloudType::Ptr cloud) {
     // hsv to rgb
     cv::Mat image_rgb;
     cv::cvtColor(image_flipped, image_rgb, cv::COLOR_HSV2BGR);
-    cv::imwrite("./range_image.png", image_rgb);
+    cv::imwrite("./data/ch5/range_image.png", image_rgb);
 }
 
 int main(int argc, char** argv) {

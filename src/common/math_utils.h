@@ -13,6 +13,8 @@
 #include <map>
 #include <numeric>
 #include <opencv2/core.hpp>
+#include "common/eigen_types.h"
+
 
 /// 常用的数学函数
 namespace sad::math {
@@ -92,8 +94,8 @@ void UpdateMeanAndCov(int hist_m, int curr_n, const Eigen::Matrix<S, D, 1>& hist
     assert(hist_m > 0);
     assert(curr_n > 0);
     new_mean = (hist_m * hist_mean + curr_n * curr_mean) / (hist_m + curr_n);
-    new_var = (hist_m * (hist_var + (hist_mean - new_mean) * (hist_mean - new_mean).template transpose()) +
-               curr_n * (curr_var + (curr_mean - new_mean) * (curr_mean - new_mean).template transpose())) /
+    new_var = (hist_m * (hist_var + (hist_mean - new_mean) * (hist_mean - new_mean).transpose()) +
+               curr_n * (curr_var + (curr_mean - new_mean) * (curr_mean - new_mean).transpose())) /
               (hist_m + curr_n);
 }
 
@@ -154,7 +156,7 @@ bool FitLine(std::vector<Eigen::Matrix<S, 3, 1>>& data, Eigen::Matrix<S, 3, 1>& 
 
     // check eps
     for (const auto& d : data) {
-        if (dir.template cross(d - origin).template squaredNorm() > eps) {
+        if (dir.cross(d - origin).squaredNorm() > eps) {
             return false;
         }
     }

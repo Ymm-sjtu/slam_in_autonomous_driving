@@ -78,7 +78,7 @@ CloudPtr ConvertToCloud(typename pcl::PointCloud<PointT>::Ptr input) {
         p.y = pt.y;
         p.z = pt.z;
         p.intensity = pt.intensity;
-        cloud->points.template emplace_back(p);
+        cloud->points.emplace_back(p);
     }
     cloud->width = input->width;
     return cloud;
@@ -97,7 +97,7 @@ inline CloudPtr VoxelCloud(CloudPtr cloud, float voxel_size = 0.1) {
 
 template <typename S, int n>
 inline Eigen::Matrix<int, n, 1> CastToInt(const Eigen::Matrix<S, n, 1>& value) {
-    return value.array().template round().template cast<int>();
+    return value.array().round().template cast<int>();
 }
 
 }  // namespace sad

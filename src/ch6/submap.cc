@@ -41,7 +41,7 @@ void Submap::SetPose(const SE2& pose) {
 
 void Submap::UpdateFramePoseWorld() {
     for (auto& frame : frames_) {
-        frame->pose_ = pose_ * frame->pose_submap_;
+        frame->pose_ = pose_ * frame->pose_submap_; // T_w_c = T_w_s * T_s_c
     }
 }
 

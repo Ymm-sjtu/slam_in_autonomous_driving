@@ -10,6 +10,30 @@
 #include <pcl/search/impl/kdtree.hpp>
 
 namespace sad {
+void Icp2d::BuildTargetKdTree() {
+    if (target_scan_ == nullptr) {
+        LOG(ERROR) << "target is not set";
+        return;
+    }
+
+    target_cloud_.reset(new Cloud2d);
+    for (size_t i = 0; i < target_scan_->ranges.size(); ++i) {
+        if (target_scan_->ranges[i] < target_scan_->range_min || target_scan_->ranges[i] > target_scan_->range_max) {
+            continue;
+        }
+
+        double real_angle = target_scan_->angle_min + i * target_scan_->angle_increment;
+
+        Point2d p;
+        p.x = target_scan_->ranges[i] * std::cos(real_angle);
+        p.y = target_scan_->ranges[i] * std::sin(real_angle);
+        target_cloud_->points.push_back(p);
+    }
+
+    target_cloud_->width = target_cloud_->points.size();
+    target_cloud_->is_dense = false;
+    kdtree_.setInputCloud(target_cloud_);
+}
 
 bool Icp2d::AlignGaussNewton(SE2& init_pose) {
     int iterations = 10;
@@ -32,6 +56,7 @@ bool Icp2d::AlignGaussNewton(SE2& init_pose) {
                 continue;
             }
 
+            // 计算当前点的世界坐标
             float angle = source_scan_->angle_min + i * source_scan_->angle_increment;
             float theta = current_pose.so2().log();
             Vec2d pw = current_pose * Vec2d(r * std::cos(angle), r * std::sin(angle));
@@ -74,11 +99,13 @@ bool Icp2d::AlignGaussNewton(SE2& init_pose) {
 
         LOG(INFO) << "iter " << iter << " cost = " << cost << ", effect num: " << effective_num;
 
+        // 更新当前位姿
         current_pose.translation() += dx.head<2>();
         current_pose.so2() = current_pose.so2() * SO2::exp(dx[2]);
         lastCost = cost;
     }
 
+    // 通过init_pose返回得到的位姿结果
     init_pose = current_pose;
     LOG(INFO) << "estimated pose: " << current_pose.translation().transpose()
               << ", theta: " << current_pose.so2().log();
@@ -86,7 +113,7 @@ bool Icp2d::AlignGaussNewton(SE2& init_pose) {
     return true;
 }
 
-bool Icp2d::AlignGaussNewtonPoint2Plane(SE2& init_pose) {
+bool Icp2d::AlignGaussNewtonPoint2Line(SE2& init_pose) {
     int iterations = 10;
     double cost = 0, lastCost = 0;
     SE2 current_pose = init_pose;
@@ -107,6 +134,7 @@ bool Icp2d::AlignGaussNewtonPoint2Plane(SE2& init_pose) {
                 continue;
             }
 
+            // 计算当前点的世界坐标
             float angle = source_scan_->angle_min + i * source_scan_->angle_increment;
             float theta = current_pose.so2().log();
             Vec2d pw = current_pose * Vec2d(r * std::cos(angle), r * std::sin(angle));
@@ -174,31 +202,6 @@ bool Icp2d::AlignGaussNewtonPoint2Plane(SE2& init_pose) {
               << ", theta: " << current_pose.so2().log();
 
     return true;
-}
-
-void Icp2d::BuildTargetKdTree() {
-    if (target_scan_ == nullptr) {
-        LOG(ERROR) << "target is not set";
-        return;
-    }
-
-    target_cloud_.reset(new Cloud2d);
-    for (size_t i = 0; i < target_scan_->ranges.size(); ++i) {
-        if (target_scan_->ranges[i] < target_scan_->range_min || target_scan_->ranges[i] > target_scan_->range_max) {
-            continue;
-        }
-
-        double real_angle = target_scan_->angle_min + i * target_scan_->angle_increment;
-
-        Point2d p;
-        p.x = target_scan_->ranges[i] * std::cos(real_angle);
-        p.y = target_scan_->ranges[i] * std::sin(real_angle);
-        target_cloud_->points.push_back(p);
-    }
-
-    target_cloud_->width = target_cloud_->points.size();
-    target_cloud_->is_dense = false;
-    kdtree_.setInputCloud(target_cloud_);
 }
 
 }  // namespace sad

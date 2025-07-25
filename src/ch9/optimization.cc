@@ -10,6 +10,7 @@
 #include <g2o/core/robust_kernel.h>
 #include <g2o/core/sparse_block_matrix.h>
 #include <g2o/solvers/eigen/linear_solver_eigen.h>
+#include <g2o/core/robust_kernel_impl.h>
 #include <glog/logging.h>
 #include <yaml-cpp/yaml.h>
 #include <boost/format.hpp>

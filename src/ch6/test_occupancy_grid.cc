@@ -5,7 +5,7 @@
 #include <glog/logging.h>
 #include <opencv2/highgui.hpp>
 
-#include "ch6/lidar_2d_utils.h"
+// #include "ch6/lidar_2d_utils.h"
 #include "ch6/occupancy_map.h"
 #include "common/io_utils.h"
 #include "common/sys_utils.h"
@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     FLAGS_colorlogtostderr = true;
     google::ParseCommandLineFlags(&argc, &argv, true);
 
-    sad::RosbagIO rosbag_io(fLS::FLAGS_bag_path);
+    sad::RosbagIO rosbag_io(FLAGS_bag_path);
 
     /// 测试单个scan生成出来的occupancy grid是否正确
     rosbag_io

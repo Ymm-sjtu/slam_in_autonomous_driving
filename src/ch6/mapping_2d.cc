@@ -29,10 +29,12 @@ bool Mapping2D::Init(bool with_loop_closing) {
 bool Mapping2D::ProcessScan(MultiScan2d::Ptr scan) { return ProcessScan(MultiToScan2d(scan)); }
 
 bool Mapping2D::ProcessScan(Scan2d::Ptr scan) {
+    // 帧创建：将激光扫描数据封装为Frame对象
     current_frame_ = std::make_shared<Frame>(scan);
     current_frame_->id_ = frame_id_++;
 
     if (last_frame_) {
+        // 运动预测：基于上一帧位姿和运动估计
         // set pose from last frame
         // current_frame_->pose_ = last_frame_->pose_;
         current_frame_->pose_ = last_frame_->pose_ * motion_guess_;
@@ -47,6 +49,7 @@ bool Mapping2D::ProcessScan(Scan2d::Ptr scan) {
 
     // current_submap_->AddScanInOccupancyMap(current_frame_);
     first_scan_ = false;
+    // 关键帧判断：基于阈值决定是否为关键帧
     bool is_kf = IsKeyFrame();
 
     if (is_kf) {
@@ -86,6 +89,7 @@ bool Mapping2D::ProcessScan(Scan2d::Ptr scan) {
 
     cv::waitKey(10);
 
+    // 运动估计更新
     if (last_frame_) {
         motion_guess_ = last_frame_->pose_.inverse() * current_frame_->pose_;
     }
@@ -97,9 +101,11 @@ bool Mapping2D::ProcessScan(Scan2d::Ptr scan) {
 
 bool Mapping2D::IsKeyFrame() {
     if (last_keyframe_ == nullptr) {
-        return true;
+        return true;  // 第一帧必须是关键帧
     }
 
+    // 位移阈值：相对于上一关键帧移动超过0.3米
+    // 角度阈值：相对于上一关键帧转动超过15度
     SE2 delta_pose = last_keyframe_->pose_.inverse() * current_frame_->pose_;
     if (delta_pose.translation().norm() > keyframe_pos_th_ || fabs(delta_pose.so2().log()) > keyframe_ang_th_) {
         return true;
@@ -121,15 +127,16 @@ void Mapping2D::ExpandSubmap() {
         loop_closing_->AddFinishedSubmap(current_submap_);
     }
 
-    // 将当前submap替换成新的
     auto last_submap = current_submap_;
 
     // debug
+    // 保存子地图图像
     cv::imwrite("./data/ch6/submap_" + std::to_string(last_submap->GetId()) + ".png",
                 last_submap->GetOccuMap().GetOccupancyGridBlackWhite());
 
+    // 创建新子地图
     current_submap_ = std::make_shared<Submap>(current_frame_->pose_);
-    current_frame_->pose_submap_ = SE2();  // 这个归零
+    current_frame_->pose_submap_ = SE2();  // 子地图坐标归零
 
     current_submap_->SetId(++submap_id_);
     current_submap_->AddKeyFrame(current_frame_);
@@ -152,12 +159,14 @@ cv::Mat Mapping2D::ShowGlobalMap(int max_size) {
     Vec2f top_left = Vec2f(999999, 999999);
     Vec2f bottom_right = Vec2f(-999999, -999999);
 
-    const float submap_resolution = 20.0;  // 子地图分辨率（1米多少个像素）
-    const float submap_size = 50.0;        // 单个submap大小
+    const float submap_resolution = 20.0;  // 子地图分辨率（1米=20像素）
+    const float submap_size = 50.0;        // 单个子地图覆盖50米×50米
 
-    /// 计算全局地图物理边界
+    /// 遍历所有子地图，计算物理边界
     for (auto m : all_submaps_) {
-        Vec2d c = m->GetPose().translation();
+        Vec2d c = m->GetPose().translation();  // 子地图中心
+
+        // 更新边界框
         if (top_left[0] > c[0] - submap_size / 2) {
             top_left[0] = c[0] - submap_size / 2;
         }
@@ -179,10 +188,11 @@ cv::Mat Mapping2D::ShowGlobalMap(int max_size) {
 
     /// 全局地图物理中心
     Vec2f global_center = Vec2f((top_left[0] + bottom_right[0]) / 2.0, (top_left[1] + bottom_right[1]) / 2.0);
-    float phy_width = bottom_right[0] - top_left[0];   // 物理尺寸
-    float phy_height = bottom_right[1] - top_left[1];  // 物理尺寸
-    float global_map_resolution = 0;
+    float phy_width = bottom_right[0] - top_left[0];   // 物理宽度
+    float phy_height = bottom_right[1] - top_left[1];  // 物理高度
+    float global_map_resolution = 0;                   // 全局地图分辨率, 像素/米
 
+    // 自适应分辨率：保持长边为max_size像素
     if (phy_width > phy_height) {
         global_map_resolution = max_size / phy_width;
     } else {

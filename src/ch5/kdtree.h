@@ -9,14 +9,14 @@
 #include "common/point_types.h"
 
 #include <glog/logging.h>
-#include <map>
+#include <unordered_map>
 #include <queue>
 
 namespace sad {
 
 /// Kd树节点，二叉树结构，内部用祼指针，对外一个root的shared_ptr
 struct KdTreeNode {
-    int id_ = -1;
+    int id_ = -1;                  // 节点id
     int point_idx_ = 0;            // 点的索引
     int axis_index_ = 0;           // 分割轴
     float split_thresh_ = 0.0;     // 分割位置
@@ -118,14 +118,14 @@ class KdTree {
     int k_ = 5;                                   // knn最近邻数量
     std::shared_ptr<KdTreeNode> root_ = nullptr;  // 根节点
     std::vector<Vec3f> cloud_;                    // 输入点云
-    std::unordered_map<int, KdTreeNode*> nodes_;  // for bookkeeping
+    std::unordered_map<int, KdTreeNode*> nodes_;  // 节点记录表
 
     size_t size_ = 0;       // 叶子节点数量
     int tree_node_id_ = 0;  // 为kdtree node 分配id
 
     // 近似最近邻
-    bool approximate_ = true;
-    float alpha_ = 0.1;
+    bool approximate_ = true; // 是否使用近似最近邻
+    float alpha_ = 0.1;       // 近似最近邻的倍数
 };
 
 }  // namespace sad

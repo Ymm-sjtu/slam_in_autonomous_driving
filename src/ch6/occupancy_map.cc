@@ -57,16 +57,23 @@ double OccupancyMap::FindRangeInAngle(double angle, Scan2d::Ptr scan) {
         double real_angle1 = scan->angle_min + scan->angle_increment * angle_index;
         double real_angle2 = scan->angle_min + scan->angle_increment * angle_index_p;
 
+        // 情况1: range2无效，使用range1
         if (range2 < scan->range_min || range2 > scan->range_max) {
             range = range1;
             real_angle = real_angle1;
-        } else if (range1 < scan->range_min || range1 > scan->range_max) {
+        } 
+        // 情况2: range1无效，使用range2
+        else if (range1 < scan->range_min || range1 > scan->range_max) {
             range = range2;
             real_angle = real_angle2;
-        } else if (std::fabs(range1 - range2) > 0.3) {
+        } 
+        // 情况3: 两点距离差异过大，选择更接近的点
+        else if (std::fabs(range1 - range2) > 0.3) {
             range = s > 0.5 ? range2 : range1;
             real_angle = s > 0.5 ? real_angle2 : real_angle1;
-        } else {
+        } 
+        // 情况4: 正常线性插值
+        else {
             range = range1 * (1 - s) + range2 * s;
         }
     }
@@ -78,6 +85,7 @@ void OccupancyMap::AddLidarFrame(std::shared_ptr<Frame> frame, GridMethod method
     
     // 此处不能直接使用frame->pose_submap_，因为frame可能来自上一个地图
     // 此时frame->pose_submap_还未更新，依旧是frame在上一个地图中的pose
+    // frame->pose_是当前激光帧在世界坐标系中的位姿
     SE2 pose_in_submap = pose_.inverse() * frame->pose_;
     float theta = pose_in_submap.so2().log();
     has_outside_pts_ = false;
@@ -94,6 +102,7 @@ void OccupancyMap::AddLidarFrame(std::shared_ptr<Frame> frame, GridMethod method
         double x = scan->ranges[i] * std::cos(real_angle);
         double y = scan->ranges[i] * std::sin(real_angle);
 
+        // 计算末端点在图像坐标系下的坐标
         endpoints.emplace(World2Image(frame->pose_ * Vec2d(x, y)));
     }
 
@@ -101,7 +110,7 @@ void OccupancyMap::AddLidarFrame(std::shared_ptr<Frame> frame, GridMethod method
         // 遍历模板，生成白色点
         std::for_each(std::execution::par_unseq, model_.begin(), model_.end(), [&](const Model2DPoint& pt) {
             Vec2i pos_in_image = World2Image(frame->pose_.translation());
-            Vec2i pw = pos_in_image + Vec2i(pt.dx_, pt.dy_);  // submap下
+            Vec2i pw = pos_in_image + Vec2i(pt.dx_, pt.dy_);  // 模型点在子地图中的位置
 
             if (pt.range_ < closest_th_) {
                 // 小距离内认为无物体
@@ -146,7 +155,7 @@ void OccupancyMap::SetPoint(const Vec2i& pt, bool occupy) {
         return;
     }
 
-    /// 这里设置了一个上下限
+    /// 这里设置了一个上下限（117~137）
     uchar value = occupancy_grid_.at<uchar>(y, x);
     if (occupy) {
         if (value > 117) {

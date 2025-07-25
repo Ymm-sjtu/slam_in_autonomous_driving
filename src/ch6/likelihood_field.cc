@@ -34,6 +34,7 @@ void LikelihoodField::SetTargetScan(Scan2d::Ptr scan) {
         double y = scan->ranges[i] * std::sin(real_angle) * resolution_ + 500;
 
         // 在(x,y)附近填入场函数
+        // 在每个障碍物周围应用距离模板，取最小值
         for (auto& model_pt : model_) {
             int xx = int(x + model_pt.dx_);
             int yy = int(y + model_pt.dy_);

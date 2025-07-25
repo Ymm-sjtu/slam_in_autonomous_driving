@@ -16,6 +16,7 @@
 #include "common/math_utils.h"
 #include "common/timer/timer.h"
 #include "lio_preinteg.h"
+#include "g2o/core/robust_kernel_impl.h"
 
 namespace sad {
 
