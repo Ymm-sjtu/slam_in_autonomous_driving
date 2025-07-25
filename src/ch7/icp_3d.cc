@@ -145,14 +145,14 @@ bool Icp3d::AlignP2Plane(SE3& init_pose) {
                     nn_eigen.emplace_back(ToVec3d(target_->points[nn[i]]));
                 }
 
-                Vec4d n;
+                Vec4d n;  // 平面参数
                 if (!math::FitPlane(nn_eigen, n)) {
                     // 失败的不要
                     effect_pts[idx] = false;
                     return;
                 }
 
-                double dis = n.head<3>().dot(qs) + n[3];
+                double dis = n.head<3>().dot(qs) + n[3];  // 点到平面的距离
                 if (fabs(dis) > options_.max_plane_distance_) {
                     // 点离的太远了不要
                     effect_pts[idx] = false;
@@ -270,7 +270,7 @@ bool Icp3d::AlignP2Line(SE3& init_pose) {
                     return;
                 }
 
-                Vec3d err = SO3::hat(d) * (qs - p0);
+                Vec3d err = SO3::hat(d) * (qs - p0);  // 公式（7.9）
 
                 if (err.norm() > options_.max_line_distance_) {
                     // 点离的太远了不要
@@ -282,7 +282,7 @@ bool Icp3d::AlignP2Line(SE3& init_pose) {
 
                 // build residual
                 Eigen::Matrix<double, 3, 6> J;
-                J.block<3, 3>(0, 0) = -SO3::hat(d) * pose.so3().matrix() * SO3::hat(q);
+                J.block<3, 3>(0, 0) = -SO3::hat(d) * pose.so3().matrix() * SO3::hat(q);  // 公式（7.11）
                 J.block<3, 3>(0, 3) = SO3::hat(d);
 
                 jacobians[idx] = J;
@@ -342,3 +342,40 @@ bool Icp3d::AlignP2Line(SE3& init_pose) {
 }
 
 }  // namespace sad
+
+/*
+J = ∂r(x)/∂x  // r: 残差函数, x: 位姿参数[ω, t]
+
+维度关系:
+如果 r ∈ ℝⁿ, x ∈ ℝ⁶, 则 J ∈ ℝⁿˣ⁶
+
+
+1.point to point ICP:
+// 残差函数: 3D向量
+Vec3d e = p - qs;  // p: 目标点, qs: 变换后的源点
+e ∈ ℝ³  // 3维残差
+
+// 雅可比计算:
+J.block<3, 3>(0, 0) = pose.so3().matrix() * SO3::hat(q);  // ∂e/∂ω
+J.block<3, 3>(0, 3) = -Mat3d::Identity();
+
+
+2.point to plane ICP:
+// 残差函数: 标量
+double dis = n.head<3>().dot(qs) + n[3];  // 点到平面的有向距离
+dis ∈ ℝ¹  // 1维残差
+
+// 雅可比计算:
+J.block<1, 3>(0, 0) = -n.head<3>().transpose() * pose.so3().matrix() * SO3::hat(q);  // ∂dis/∂ω
+J.block<1, 3>(0, 3) = n.head<3>().transpose();
+
+
+3.point to line ICP:
+// 残差函数: 3D向量
+Vec3d err = SO3::hat(d) * (qs - p0);  // 点到直线的距离向量
+err ∈ ℝ³  // 3维残差
+
+// 雅可比计算:
+J.block<3, 3>(0, 0) = -SO3::hat(d) * pose.so3().matrix() * SO3::hat(q);  // ∂err/∂ω
+J.block<3, 3>(0, 3) = SO3::hat(d);
+*/

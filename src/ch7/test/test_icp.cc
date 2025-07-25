@@ -43,6 +43,7 @@ int main(int argc, char** argv) {
 
     bool success;
 
+    // 点到点
     sad::evaluate_and_call(
         [&]() {
             sad::Icp3d icp;
@@ -54,6 +55,10 @@ int main(int argc, char** argv) {
             if (success) {
                 LOG(INFO) << "icp p2p align success, pose: " << pose.so3().unit_quaternion().coeffs().transpose()
                           << ", " << pose.translation().transpose();
+                //  pose.so3()：从SE3位姿中提取SO3旋转部分
+                //  unit_quaternion()：将旋转矩阵转换为单位四元数表示
+                //  coeffs()：获取四元数的系数向量 [x, y, z, w]
+                //  transpose()：转置为行向量，便于日志输出
                 sad::CloudPtr source_trans(new sad::PointCloudType);
                 pcl::transformPointCloud(*source, *source_trans, pose.matrix().cast<float>());
                 sad::SaveCloudToFile("./data/ch7/icp_trans.pcd", *source_trans);
